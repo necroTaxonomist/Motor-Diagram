@@ -2,8 +2,8 @@ import javafx.scene.layout.Pane;
 
 public class Diagram extends Pane
 {
-    private Core leftCore;
-    private Core rightCore;
+    private RotatableCore leftCore;
+    private RotatableCore rightCore;
     private Spinner spinner;
     
     public Diagram(double radius,
@@ -13,8 +13,8 @@ public class Diagram extends Pane
                    double x,
                    double y)
     {
-        leftCore = new Core(radius, thickness, angle, length, 1, x, y);
-        rightCore = new Core(radius, thickness, angle, length, -1, x, y);
+        leftCore = new RotatableCore(radius, thickness, angle, length, Math.PI, x, y);
+        rightCore = new RotatableCore(radius, thickness, angle, length, 0, x, y);
         spinner = new Spinner(x,y,radius,radius/3);
         
         getChildren().add(leftCore);
@@ -25,7 +25,7 @@ public class Diagram extends Pane
 
     public void setCoreVoltages(double voltage)
     {
-        leftCore.updateColor(voltage);
+        leftCore.updateColor(-voltage);
         rightCore.updateColor(voltage);
     }
     
@@ -36,6 +36,6 @@ public class Diagram extends Pane
     
     public void setSpinnerAC(double voltage, double frequency)
     {
-        spinner.acVoltage(voltage !=0 ? frequency : 0, 0, Math.PI/4);
+        //spinner.acVoltage(voltage !=0 ? frequency : 0, 0, Math.PI/4);
     }
 }

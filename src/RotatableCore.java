@@ -3,26 +3,25 @@ import javafx.scene.shape.Polygon;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 
-public class Core extends Pane
+public class RotatableCore extends Pane
 {
-    private int direction;
-    
     private Polygon mainShape;
     
-    public Core(double radius,
-                double thickness,
-                double angle,
-                double length,
-                int dirIn,
-                double x,
-                double y)
+    private Line[] coil;
+    
+    public RotatableCore(double radius,
+                         double thickness,
+                         double angle,
+                         double length,
+                         double rotation,
+                         double x,
+                         double y)
     {
-        mainShape = createPoints(radius, thickness, Math.PI * angle / 180, length, -1*dirIn, x, y);
-        direction = dirIn / Math.abs(dirIn);
+        mainShape = createPoints(radius, thickness, angle, length, rotation, x, y);
         mainShape.setStroke(Color.BLACK);
         getChildren().add(mainShape);
         
-        Line[] coil = createCoil(radius, thickness, Math.PI * angle / 180, 3*length/4, -1*dirIn, x, y, 5);
+        coil = createCoil(radius, thickness, angle, 3*length/4, rotation, x, y, 5);
         
         for (int i = 0; i < coil.length; ++i)
             getChildren().add(coil[i]);
@@ -30,10 +29,10 @@ public class Core extends Pane
     
     public void updateColor(double voltage)
     {
-        voltage *= -direction;
-        
         if (voltage > 1)
-            throw new NullPointerException();
+            voltage = 1;
+        else if (voltage < -1)
+            voltage = -1;
         
         double r = voltage <= 0 ? .85 - 0.15*voltage : .85 - 0.20*voltage;
         double g = voltage <= 0 ? .85 + 0.20*voltage : .85 - 0.20*voltage;
@@ -48,17 +47,24 @@ public class Core extends Pane
                                         double thickness,
                                         double angle,
                                         double length,
-                                        int dir,
+                                        double rotation,
                                         double xDisp,
                                         double yDisp)
     {
+        System.out.println("PART 0");
+        
         double inc = Math.asin((thickness/2) / (radius+thickness));
         int amplitude = (int)Math.floor(angle/2/inc);
         int numPoints = 4 * amplitude + 3;
         
+        System.out.println("amplitude=" + amplitude);
+        System.out.println("numPoints=" + numPoints);
+        
         double[] points = new double[numPoints*2];
         
         int nextIndex= 0;
+        
+        System.out.println("PART 1");
         
         for (int t = amplitude; t >= 1; --t)
         {
@@ -76,6 +82,8 @@ public class Core extends Pane
             }
         }
         
+        System.out.println("PART 2");
+        
         for (int t = -1; t >= -amplitude; --t)
         {
             double theta = inc * t;
@@ -92,6 +100,8 @@ public class Core extends Pane
             points[nextIndex] = y; ++nextIndex;
         }
         
+        System.out.println("PART 3");
+        
         for (int t = -amplitude; t <= amplitude; ++t)
         {
             double theta = inc * t;
@@ -102,12 +112,18 @@ public class Core extends Pane
             points[nextIndex] = y; ++nextIndex;
         }
         
-        for (int i = 0; i < points.length; ++i)
+        System.out.println("PART 4");
+        
+        for (int i = 0; i < points.length; i += 2)
         {
-            if (i % 2 == 0)
-                points[i] = points[i] * dir + xDisp;
-            else
-                points[i] = points[i] + yDisp;
+            double oldX = points[i];
+            double oldY = points[i+1];
+            
+            double newX = oldX * Math.cos(rotation) - oldY * Math.sin(rotation) + xDisp;
+            double newY = oldX * Math.sin(rotation) + oldY * Math.cos(rotation) + yDisp;
+            
+            points[i] = newX;
+            points[i+1] = newY;
         }
         
         return new Polygon(points);
@@ -117,7 +133,7 @@ public class Core extends Pane
                                      double thickness,
                                      double angle,
                                      double length,
-                                     int dir,
+                                     double rotation,
                                      double xDisp,
                                      double yDisp,
                                      int number)
@@ -132,22 +148,47 @@ public class Core extends Pane
             double x1 = radius + thickness + i * (length / number);
             double x2 = radius + thickness + (i+1) * (length / number);
             
-            lines[i] = new Line(dir * x1 + xDisp,
-                                y1 + yDisp,
-                                dir * x2 + xDisp,
-                                y2 + yDisp);
+            lines[i] = new Line(x1,
+                                y1,
+                                x2,
+                                y2);
             
             lines[i].setStrokeWidth(2.0);
         }
         
         double x = radius + thickness + length;
         
-        lines[number] = new Line(dir * x + xDisp,
-                                   y1 + yDisp,
-                                   dir * x + xDisp,
-                                   y1 + radius + yDisp);
+        lines[number] = new Line(x,
+                                 y1,
+                                 x,
+                                 y1 + radius);
         
         lines[number].setStrokeWidth(2.0);
+        
+        double mirror = 1;
+        if (rotation == -Math.PI)
+            mirror = -1;
+        
+        for (int i = 0; i < lines.length; ++i)
+        {
+            double oldX = lines[i].getStartX();
+            double oldY = lines[i].getStartY() * mirror;
+            
+            double newX = oldX * Math.cos(rotation) - oldY * Math.sin(rotation) + xDisp;
+            double newY = oldX * Math.sin(rotation) + oldY * Math.cos(rotation) + yDisp;
+            
+            lines[i].setStartX(newX);
+            lines[i].setStartY(newY);
+            
+            oldX = lines[i].getEndX();
+            oldY = lines[i].getEndY() * mirror;
+            
+            newX = oldX * Math.cos(rotation) - oldY * Math.sin(rotation) + xDisp;
+            newY = oldX * Math.sin(rotation) + oldY * Math.cos(rotation) + yDisp;
+            
+            lines[i].setEndX(newX);
+            lines[i].setEndY(newY);
+        }
         
         return lines;
     }

@@ -1,1 +1,1 @@
-javaw -cp ./bin MotorDiagram
+java -cp ./bin MotorDiagram

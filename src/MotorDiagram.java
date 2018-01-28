@@ -19,9 +19,13 @@ public class MotorDiagram extends Application
     public static final int WINDOW_HEIGHT = 400;
     private Scale windowScale;
     
-    private Diagram diagram;
-    private StatorDiagram sDiagram;
-    private SideBar sideBar;
+    private GeneralDiagram diagram;
+    private GeneralBar sideBar;
+    
+    private GeneralDiagram fourCore;
+    private RotateBar fourBar;
+    
+    private GeneralDiagram stator;
     private StatorBar statorBar;
     
     public static void main(String[] args)
@@ -36,65 +40,43 @@ public class MotorDiagram extends Application
         TabPane mainPane = new TabPane();
         mainPane.setSide(Side.RIGHT);
         
-        BorderPane normalPane = new BorderPane();
-        BorderPane statorPane = new BorderPane();
+        // 2 CORE
         
+        BorderPane normalPane = new BorderPane();
         Tab normalTab = new Tab("2 Core", normalPane);
         normalTab.setClosable(false);
-        
-        Tab statorTab = new Tab("Stator", statorPane);
-        statorTab.setClosable(false);
-        
         mainPane.getTabs().add(normalTab);
-        mainPane.getTabs().add(statorTab);
         
-        diagram = new Diagram(90, 45, 120, 112.5, 300, 150);
-        sDiagram = new StatorDiagram(90, 11.25, 55, 300, 200);
-        sideBar = new SideBar();
-        statorBar = new  StatorBar();
-        
-        sideBar.getVoltage().addListener(new ChangeListener<Number>()
-        {
-            public void changed(ObservableValue<? extends Number> ov, Number oldVal, Number newVal)
-            {
-                updateCoreVoltages(newVal.doubleValue());
-                if (!sideBar.isAlternating())
-                    updateSpinnerDC(newVal.doubleValue());
-            }
-        });
-        sideBar.getACChanges().addListener(new ChangeListener<Number>()
-        {
-            public void changed(ObservableValue<? extends Number> ov, Number oldVal, Number newVal)
-            {
-                updateCoreVoltages(sideBar.getVoltage().getValue());
-                if (sideBar.isAlternating())
-                    updateSpinnerAC(sideBar.getAmplitude(), sideBar.getFrequency());
-                else
-                    updateSpinnerDC(sideBar.getAmplitude());
-            }
-        });
-        
-        statorBar.getVoltage().addListener(new ChangeListener<Number>()
-        {
-            public void changed(ObservableValue<? extends Number> ov, Number oldVal, Number newVal)
-            {
-                updateStatorVoltages(newVal.doubleValue());
-            }
-        });
-        statorBar.getACChanges().addListener(new ChangeListener<Number>()
-        {
-            public void changed(ObservableValue<? extends Number> ov, Number oldVal, Number newVal)
-            {
-                updateStatorVoltages(statorBar.getVoltage().getValue());
-                updateStatorAC(statorBar.getAmplitude(), statorBar.getFrequency());
-            }
-        });
+        diagram = new CoresDiagram(2, 90, 45, Math.PI / 3, 112.5, 300, 150);
+        sideBar = new GeneralBar(diagram);
         
         normalPane.setCenter(diagram);
         normalPane.setLeft(sideBar);
-        statorPane.setCenter(sDiagram);
+        
+        // 4 CORE
+        BorderPane fourPane = new BorderPane();
+        Tab fourTab = new Tab("4 Core", fourPane);
+        fourTab.setClosable(false);
+        mainPane.getTabs().add(fourTab);
+        
+        fourCore = new CapacitorDiagram(75, 35, Math.PI / 15, 50, 300, 200);
+        fourBar = new RotateBar(fourCore);
+        
+        fourPane.setCenter(fourCore);
+        fourPane.setLeft(fourBar);
+        
+        // STATOR
+        BorderPane statorPane = new BorderPane();
+        Tab statorTab = new Tab("Stator", statorPane);
+        statorTab.setClosable(false);
+        mainPane.getTabs().add(statorTab);
+        
+        stator = new StatorDiagram(90, 11.25, 55, 300, 200);
+        statorBar = new StatorBar(stator);
+        
+        statorPane.setCenter(stator);
         statorPane.setLeft(statorBar);
-        //mainPane.setBottom(grandDad);
+        
         
         Scene scene = new Scene(mainPane, WINDOW_WIDTH, WINDOW_HEIGHT);
         primaryStage.setScene(scene);
@@ -111,42 +93,13 @@ public class MotorDiagram extends Application
             });
             
         diagram.getTransforms().add(windowScale);
-        sDiagram.getTransforms().add(windowScale);
-        
-        updateCoreVoltages(0);
-        updateSpinnerDC(0);
-        
-        updateStatorVoltages(-1);
+        fourCore.getTransforms().add(windowScale);
+        stator.getTransforms().add(windowScale);
         
         normalPane.setMargin(sideBar, new Insets(20,20,20,25));
-        statorPane.setMargin(statorBar, new Insets(20,20,20,25));
+        normalPane.setMargin(fourBar, new Insets(20,20,20,25));
+        normalPane.setMargin(statorBar, new Insets(20,20,20,25));
         
         primaryStage.show();
-    }
-    
-    public void updateCoreVoltages(double voltage)
-    {
-        diagram.setCoreVoltages(voltage);
-    }
-    
-    public void updateStatorVoltages(double voltage)
-    {
-        sDiagram.setToothVoltages(voltage);
-        sDiagram.setAmplitude(statorBar.getAmplitude());
-    }
-    
-    public void updateSpinnerDC(double voltage)
-    {
-        diagram.setSpinnerDC(voltage);
-    }
-    
-    public void updateSpinnerAC(double voltage, double frequency)
-    {
-        diagram.setSpinnerAC(voltage, frequency);
-    }
-    
-    public void updateStatorAC(double voltage, double frequency)
-    {
-        sDiagram.setSpinnerAC(voltage, frequency);
     }
 }

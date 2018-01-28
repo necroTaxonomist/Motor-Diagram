@@ -22,7 +22,9 @@ public class Tooth extends Pane
     public void updateColor(double voltage)
     {
         if (voltage > 1)
-            throw new NullPointerException();
+            voltage = 1;
+        else if (voltage < -1)
+            voltage = -1;
         
         double r = voltage <= 0 ? .85 - 0.15*voltage : .85 - 0.20*voltage;
         double g = voltage <= 0 ? .85 + 0.20*voltage : .85 - 0.20*voltage;

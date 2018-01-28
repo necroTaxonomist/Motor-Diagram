@@ -2,12 +2,10 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
 import javafx.scene.paint.Color;
 
-public class StatorDiagram extends Pane
+public class StatorDiagram extends GeneralDiagram
 {
     private Tooth[] teeth;
     private Coil[] coils;
-    private Spinner spinner;
-    private double amplitude;
     
     public StatorDiagram(double radius,
                    double thickness,
@@ -15,6 +13,8 @@ public class StatorDiagram extends Pane
                    double x,
                    double y)
     {
+        super(x,y);
+        
         teeth = new Tooth[6];
         for (int i = 0; i < 6; ++i)
         {
@@ -43,37 +43,20 @@ public class StatorDiagram extends Pane
             getChildren().add(coils[2*i+1]);
         }
         
-        
-        spinner = new Spinner(x,y,radius,radius/3);
-        
-        
-        getChildren().add(spinner);
-        spinner.acknowledgeParent();
-        
-        amplitude = 0;
+        initSpinner(x,y);
     }
-
-    public void setToothVoltages(double phase)
+    
+    public void setVoltageFollow(double voltage, double direction)
     {
-        
-        //teeth[0].updateColor(Math.sin(phase));
-        //teeth[1].updateColor(Math.sin(phase + Math.PI));
         for (int i = 0; i < 6; ++i)
         {
-            if (phase < 0)
-                teeth[i].updateColor(0);
-            else
-                teeth[i].updateColor(amplitude * Math.sin(phase + i*Math.PI/3));
+            double rotation = 2 * Math.PI * i / 6;
+            
+            double scale = Math.cos(direction - rotation);
+            
+            teeth[i].updateColor(voltage * scale);
         }
-    }
-    
-    public void setSpinnerAC(double voltage, double frequency)
-    {
-        spinner.acVoltage(voltage !=0 ? frequency : 0, 0, Math.PI/2);
-    }
-    
-    public void setAmplitude(double amp)
-    {
-        amplitude = amp;
+        
+        super.setVoltageFollow(voltage, direction);
     }
 }

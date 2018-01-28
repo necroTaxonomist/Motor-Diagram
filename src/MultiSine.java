@@ -50,8 +50,8 @@ public class MultiSine extends Pane
             getChildren().add(lines[l]);
             
             lines[l].setStroke(new Color(l % 3 == 0 ? 1.0 : 0,
-                                         l % 3 == 1 ? 1.0 : 0,
                                          l % 3 == 2 ? 1.0 : 0,
+                                         l % 3 == 1 ? 1.0 : 0,
                                          1));
         }
     }

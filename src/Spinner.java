@@ -10,6 +10,9 @@ public class Spinner extends Pane
     private static final double FRICTION = 1;
     private static final double MAX_ACC = 5 + FRICTION;
     
+    private static final double MAX_VEL = 10;
+    private static final double THRESH = Math.PI / 100;
+    
     private double theta;
     private double omega;
     
@@ -46,20 +49,12 @@ public class Spinner extends Pane
         
         northEnd.setOnMousePressed((e) ->
             {
-                if (!alternating)
-                    grab = 1;
+                grab = 1;
             });
         
         southEnd.setOnMousePressed((e) ->
             {
-                if (!alternating)
-                    grab = -1;
-            });
-        
-        middle.setOnMousePressed((e) ->
-            {
-                if (!alternating)
-                    omega = 0;
+                grab = -1;
             });
         
         setOnMouseReleased((e) ->
@@ -123,25 +118,32 @@ public class Spinner extends Pane
         {
             double dt = 1.0 / 60;
             
-            double driving = -MAX_ACC * Math.sin(theta - voltageDir) * voltageMag;
+            double driving = MAX_VEL * Math.sin(voltageDir - theta) * voltageMag;
             
-            double friction;
-            if (omega != 0 && acFrequency == 0)
-                friction = omega < 0 ? FRICTION: -FRICTION;
-            else
-                friction = 0;
+            if (omega != 0 && Math.signum(omega) != Math.signum(driving))
+                driving *= -1;
             
-            double alpha = friction;
+            omega = driving;
             
-            if (omega != 0 && omega > 0 != omega + friction*dt > 0)
+            double dist = voltageDir - theta;
+            while (dist < 0)
+                dist += 2 * Math.PI;
+            if (dist > Math.PI)
+                dist = 2 * Math.PI - dist;
+            
+            if (dist < THRESH || dist < Math.abs(omega) * dt)
             {
-                theta += omega*dt - omega*dt*dt/2;
+                theta = voltageDir;
+                omega = 0;
+            }
+            else if (dist > Math.PI - THRESH)
+            {
+                theta = voltageDir - Math.PI;
                 omega = 0;
             }
             else
             {
-                theta += omega*dt + alpha*dt*dt/2;
-                omega += alpha*dt;
+                theta += omega * dt;
             }
         }
         else
@@ -172,20 +174,11 @@ public class Spinner extends Pane
         voltageDir = newDir;
     }
     
-    public void acVoltage(double frequency, double newDir, double setAngle)
+    public void acVoltage(double newMag, double newDir)
     {
         alternating = true;
-        acFrequency = frequency;
+        voltageMag = newMag;
         voltageDir = newDir;
-        
-        theta = setAngle;
-        
-        if (frequency != 0)
-        {
-            omega = -2 * Math.PI * frequency;
-            //if (Math.sin(newDir - theta) < 0)
-                //omega *= -1;
-        }
     }
     
     public void acknowledgeParent()
