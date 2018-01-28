@@ -6,22 +6,36 @@ public class Diagram extends Pane
     private Core rightCore;
     private Spinner spinner;
     
-    public Diagram()
+    public Diagram(double radius,
+                   double thickness,
+                   double angle,
+                   double length,
+                   double x,
+                   double y)
     {
-        leftCore = new Core(60,30,120, 50, 1, 200, 150);
-        rightCore = new Core(60,30,120, 50, -1, 200, 150);
-        spinner = new Spinner(200,150,60,20);
+        leftCore = new Core(radius, thickness, angle, length, 1, x, y);
+        rightCore = new Core(radius, thickness, angle, length, -1, x, y);
+        spinner = new Spinner(x,y,radius,radius/3);
         
         getChildren().add(leftCore);
         getChildren().add(rightCore);
         getChildren().add(spinner);
         spinner.acknowledgeParent();
     }
-    
-    public void updateVoltage(double voltage)
+
+    public void setCoreVoltages(double voltage)
     {
         leftCore.updateColor(voltage);
         rightCore.updateColor(voltage);
-        spinner.updateVoltage(voltage);
+    }
+    
+    public void setSpinnerDC(double voltage)
+    {
+        spinner.dcVoltage(Math.abs(voltage), voltage >= 0 ? 0 : Math.PI);
+    }
+    
+    public void setSpinnerAC(double voltage, double frequency)
+    {
+        spinner.acVoltage(voltage !=0 ? frequency : 0, 0, Math.PI/4);
     }
 }
